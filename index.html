@@ -23,7 +23,7 @@
     --cancel:#8B93A3;
     --cancel-bg:rgba(139,147,163,0.14);
     --theory:#5B8DEF;
-    --lab:#A972E0;
+    --lab:#F0A93B;
     --none:#6E7686;
     --radius:14px;
   }
@@ -164,6 +164,7 @@
     padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);
     color:var(--muted);font-size:12px;font-weight:600;
   }
+  .status-btn.on{border-color:var(--gold);color:var(--paper);background:var(--card-hover);}
   .status-btn.p.on{background:var(--present-bg);border-color:var(--present);color:var(--present);}
   .status-btn.a.on{background:var(--absent-bg);border-color:var(--absent);color:var(--absent);}
   .status-btn.c.on{background:var(--cancel-bg);border-color:var(--cancel);color:var(--cancel);}
@@ -171,7 +172,8 @@
   .load-more{text-align:center;padding:10px;color:var(--muted);font-size:12px;}
 
   /* ---------- SUBJECT OVERVIEW ---------- */
-  .subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;}
+  .subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-bottom:24px;}
+  .overview-group-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 0 12px 0;}
   .subj-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;}
   .subj-card-top{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
   .ring{width:52px;height:52px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative;}
@@ -305,7 +307,7 @@
     </div>
 
     <div id="tab-overview" style="display:none;">
-      <div class="subj-grid" id="subjGrid"></div>
+      <div id="subjGrid"></div>
     </div>
   </section>
 
@@ -427,18 +429,32 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-const PERIODS = 8;
+const PERIODS = 7;
 const TYPE_COLOR = { theory:"var(--theory)", lab:"var(--lab)", none:"var(--none)" };
 
 let uid = null;
 let userDocData = { targetPercentage: 75, semesterStart: null };
-let timetable = {}; // { Monday: [ {name,type} x8 or null ] }
-let attendanceCache = {}; // { 'YYYY-MM-DD': { day, records:{subj:status} } }
+// timetable[day] = array of PERIODS slots. Each slot is one of:
+//   null                              -> free period
+//   {name, type:'theory'|'none'}      -> a 1-period class
+//   {name, type:'lab', span:2}        -> start of a 2-period lab block
+//   {linked:true, start:<periodIdx>}  -> the 2nd hour of the lab starting at `start`
+let timetable = {};
+// attendanceCache['YYYY-MM-DD'] = { day, periods: { "<periodIndex>": "present"|"absent"|"cancelled" } }
+// keyed by the START period index of each class, so two slots of the same
+// subject on the same day are tracked completely independently.
+let attendanceCache = {};
 let unsubAttendance = null;
 
 /* ---------- date helpers ---------- */
-function fmt(d){ return d.toISOString().slice(0,10); }
-function dayName(d){ return DAYS[(d.getDay()+6)%7] === undefined ? null : ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][d.getDay()]; }
+// IMPORTANT: use local date parts, never toISOString() (which converts to
+// UTC and silently shifts the date by a day in timezones ahead of UTC).
+function fmt(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
 function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
 function todayDate(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
 function isSameDay(a,b){ return fmt(a)===fmt(b); }
@@ -519,7 +535,12 @@ async function loadTimetable(){
   const ref = doc(db,'users',uid,'meta','timetable');
   const snap = await getDoc(ref);
   timetable = snap.exists() ? snap.data() : {};
-  DAYS.forEach(d=>{ if(!timetable[d]) timetable[d] = new Array(PERIODS).fill(null); });
+  DAYS.forEach(d=>{
+    let arr = timetable[d] || [];
+    if(arr.length > PERIODS) arr = arr.slice(0,PERIODS);
+    while(arr.length < PERIODS) arr.push(null);
+    timetable[d] = arr;
+  });
 }
 
 /* ---------- INIT APP ---------- */
@@ -606,7 +627,7 @@ function flashSaved(id){
 }
 
 /* ---------- ACCOUNT: timetable editor ---------- */
-let editingCell = null; // {day, period}
+let editingCell = null; // {day, p} — p is always the START period of the class
 function renderTimetableEditor(){
   const table = document.getElementById('timetableEl');
   let html = '<tr><th style="width:78px;"></th>';
@@ -614,16 +635,27 @@ function renderTimetableEditor(){
   html += '</tr>';
   DAYS.forEach(day=>{
     html += `<tr><td class="daycell">${day.slice(0,3)}</td>`;
-    for(let p=0;p<PERIODS;p++){
+    let p=0;
+    while(p<PERIODS){
       const cell = timetable[day][p];
-      if(cell){
+      if(cell && cell.linked){ p++; continue; } // safety net, shouldn't normally hit
+      if(cell && cell.type==='lab'){
+        html += `<td colspan="2"><button class="cell-btn" data-day="${day}" data-p="${p}">
+          <span class="dot" style="background:${TYPE_COLOR.lab}"></span>
+          <span class="subj">${escapeHtml(cell.name)}</span>
+          <span class="typ">lab · P${p+1}-${p+2}</span>
+        </button></td>`;
+        p += 2;
+      } else if(cell){
         html += `<td><button class="cell-btn" data-day="${day}" data-p="${p}">
           <span class="dot" style="background:${TYPE_COLOR[cell.type]}"></span>
           <span class="subj">${escapeHtml(cell.name)}</span>
           <span class="typ">${cell.type}</span>
         </button></td>`;
+        p += 1;
       } else {
         html += `<td><button class="cell-btn" data-day="${day}" data-p="${p}">+ add</button></td>`;
+        p += 1;
       }
     }
     html += '</tr>';
@@ -636,11 +668,13 @@ function renderTimetableEditor(){
 
 let selectedType = 'theory';
 function openCellModal(day, p){
+  let cell = timetable[day][p];
+  if(cell && cell.linked){ p = cell.start; cell = timetable[day][p]; } // always edit from the start slot
   editingCell = {day,p};
-  const existing = timetable[day][p];
-  document.getElementById('cellModalTitle').textContent = `${day} — Period ${p+1}`;
-  document.getElementById('cellSubjectName').value = existing ? existing.name : '';
-  selectedType = existing ? existing.type : 'theory';
+  const label = (cell && cell.type==='lab') ? `Period ${p+1}-${p+2}` : `Period ${p+1}`;
+  document.getElementById('cellModalTitle').textContent = `${day} — ${label}`;
+  document.getElementById('cellSubjectName').value = cell ? cell.name : '';
+  selectedType = cell ? cell.type : 'theory';
   highlightTypeButtons();
   document.getElementById('cellModal').style.display='flex';
 }
@@ -648,7 +682,6 @@ function highlightTypeButtons(){
   ['theory','lab','none'].forEach(t=>{
     const el = document.getElementById('type'+t.charAt(0).toUpperCase()+t.slice(1));
     el.classList.toggle('on', selectedType===t);
-    el.style.borderColor = selectedType===t ? TYPE_COLOR[t].replace('var(','').replace(')','') : '';
   });
 }
 ['theory','lab','none'].forEach(t=>{
@@ -657,10 +690,42 @@ function highlightTypeButtons(){
   });
 });
 document.getElementById('cellCancel').addEventListener('click', ()=> document.getElementById('cellModal').style.display='none');
+
+// Clears whatever occupies this slot — if it's a lab (or the 2nd hour of one),
+// both hours are freed together so the timetable never ends up with an orphan slot.
+function clearSlot(day,p){
+  const cell = timetable[day][p];
+  if(!cell) return;
+  if(cell.linked){
+    timetable[day][cell.start] = null;
+    timetable[day][p] = null;
+  } else if(cell.type==='lab'){
+    timetable[day][p] = null;
+    if(timetable[day][p+1] && timetable[day][p+1].linked) timetable[day][p+1] = null;
+  } else {
+    timetable[day][p] = null;
+  }
+}
+
 document.getElementById('cellSave').addEventListener('click', async ()=>{
   const name = document.getElementById('cellSubjectName').value.trim();
   if(!name || !editingCell) return;
-  timetable[editingCell.day][editingCell.p] = { name, type: selectedType };
+  const {day,p} = editingCell;
+  clearSlot(day,p); // clear out whatever was here first (handles switching type)
+  if(selectedType==='lab'){
+    if(p+1>=PERIODS){
+      alert("A lab needs 2 back-to-back periods — pick an earlier starting period so it fits before the last period.");
+      return;
+    }
+    if(timetable[day][p+1]){
+      alert("The next period is already taken by another class — clear it first or choose a different starting period.");
+      return;
+    }
+    timetable[day][p] = { name, type:'lab', span:2 };
+    timetable[day][p+1] = { linked:true, start:p };
+  } else {
+    timetable[day][p] = { name, type: selectedType };
+  }
   await setDoc(doc(db,'users',uid,'meta','timetable'), timetable);
   document.getElementById('cellModal').style.display='none';
   renderTimetableEditor();
@@ -669,7 +734,7 @@ document.getElementById('cellSave').addEventListener('click', async ()=>{
 });
 document.getElementById('cellClear').addEventListener('click', async ()=>{
   if(!editingCell) return;
-  timetable[editingCell.day][editingCell.p] = null;
+  clearSlot(editingCell.day, editingCell.p);
   await setDoc(doc(db,'users',uid,'meta','timetable'), timetable);
   document.getElementById('cellModal').style.display='none';
   renderTimetableEditor();
@@ -680,16 +745,27 @@ document.getElementById('cellClear').addEventListener('click', async ()=>{
 /* ---------- get unique subjects from timetable ---------- */
 function allSubjects(){
   const map = {};
-  DAYS.forEach(day=> timetable[day].forEach(cell=>{
-    if(cell) map[cell.name] = cell.type;
+  DAYS.forEach(day=> (timetable[day]||[]).forEach(cell=>{
+    if(cell && !cell.linked) map[cell.name] = cell.type;
   }));
   return Object.entries(map).map(([name,type])=>({name,type}));
 }
+// Returns only the START slot of every class for that weekday — a lab's 2nd
+// hour is never listed separately, and each occurrence keeps its own
+// periodIndex so two classes of the same subject on the same day stay distinct.
 function subjectsForDay(day){
   const list = [];
-  (timetable[day]||[]).forEach((cell,idx)=>{
-    if(cell) list.push({...cell, period: idx+1});
-  });
+  const arr = timetable[day]||[];
+  for(let p=0;p<arr.length;p++){
+    const cell = arr[p];
+    if(!cell || cell.linked) continue;
+    list.push({
+      name: cell.name,
+      type: cell.type,
+      periodIndex: p,
+      periodLabel: cell.type==='lab' ? `P${p+1}-${p+2}` : `P${p+1}`
+    });
+  }
   return list;
 }
 
@@ -733,7 +809,14 @@ function renderDateCards(){
     const key = fmt(d);
     const isToday = isSameDay(d, todayDate());
     const subjects = DAYS.includes(dName) ? subjectsForDay(dName) : [];
-    const rec = attendanceCache[key]?.records || {};
+
+    // Hide Saturday/Sunday entirely when nothing's scheduled that day.
+    if((dName==='Saturday' || dName==='Sunday') && subjects.length===0){
+      d = addDays(d,1);
+      continue;
+    }
+
+    const rec = attendanceCache[key]?.periods || {};
 
     html += `<div class="date-card ${isToday?'is-today':''}" data-date="${key}">
       <div class="date-head">
@@ -742,20 +825,20 @@ function renderDateCards(){
       </div>`;
 
     if(subjects.length===0){
-      html += `<div class="no-classes">No classes scheduled${DAYS.includes(dName)?'':' — weekly off'}.</div>`;
+      html += `<div class="no-classes">No classes scheduled.</div>`;
     } else {
       subjects.forEach(s=>{
-        const status = rec[s.name] || '';
+        const status = rec[String(s.periodIndex)] || '';
         html += `<div class="subj-row">
           <div class="subj-name">
             <span class="dot" style="background:${TYPE_COLOR[s.type]}"></span>
             ${escapeHtml(s.name)}
-            <span class="period">P${s.period}</span>
+            <span class="period">${s.periodLabel}</span>
           </div>
           <div class="status-btns">
-            <button class="status-btn p ${status==='present'?'on':''}" data-date="${key}" data-subj="${escapeAttr(s.name)}" data-status="present">Present</button>
-            <button class="status-btn a ${status==='absent'?'on':''}" data-date="${key}" data-subj="${escapeAttr(s.name)}" data-status="absent">Absent</button>
-            <button class="status-btn c ${status==='cancelled'?'on':''}" data-date="${key}" data-subj="${escapeAttr(s.name)}" data-status="cancelled">No class</button>
+            <button class="status-btn p ${status==='present'?'on':''}" data-date="${key}" data-period="${s.periodIndex}" data-status="present">Present</button>
+            <button class="status-btn a ${status==='absent'?'on':''}" data-date="${key}" data-period="${s.periodIndex}" data-status="absent">Absent</button>
+            <button class="status-btn c ${status==='cancelled'?'on':''}" data-date="${key}" data-period="${s.periodIndex}" data-status="cancelled">No class</button>
           </div>
         </div>`;
       });
@@ -765,7 +848,7 @@ function renderDateCards(){
   }
   container.innerHTML = html;
   container.querySelectorAll('.status-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=> markStatus(btn.dataset.date, btn.dataset.subj, btn.dataset.status));
+    btn.addEventListener('click', ()=> markStatus(btn.dataset.date, btn.dataset.period, btn.dataset.status));
   });
 
   // scroll to today on first render
@@ -778,13 +861,14 @@ function renderDateCards(){
   }
 }
 
-async function markStatus(dateKey, subjName, status){
+async function markStatus(dateKey, periodIndex, status){
   const dName = dayNameFromKey(dateKey);
-  const existing = attendanceCache[dateKey] || { day: dName, records:{} };
-  const records = {...existing.records};
-  records[subjName] = records[subjName]===status ? '' : status; // toggle off if clicked again
-  if(!records[subjName]) delete records[subjName];
-  await setDoc(doc(db,'users',uid,'attendance',dateKey), { day: dName, records }, {merge:false});
+  const existing = attendanceCache[dateKey] || { day: dName, periods:{} };
+  const periods = {...existing.periods};
+  const key = String(periodIndex);
+  periods[key] = periods[key]===status ? '' : status; // toggle off if clicked again
+  if(!periods[key]) delete periods[key];
+  await setDoc(doc(db,'users',uid,'attendance',dateKey), { day: dName, periods }, {merge:false});
 }
 function dayNameFromKey(key){
   const d = new Date(key+'T00:00:00');
@@ -808,64 +892,85 @@ document.getElementById('logScroll').addEventListener('scroll', (e)=>{
 });
 
 /* ---------- SUBJECT OVERVIEW ---------- */
+// Counts each scheduled slot for a subject independently — if the same
+// subject appears twice in one day, being present for one and absent for
+// the other is tracked correctly instead of being merged into one status.
 function computeStats(subjName){
   let present=0, absent=0;
   Object.entries(attendanceCache).forEach(([date,data])=>{
-    const st = data.records && data.records[subjName];
-    if(st==='present') present++;
-    else if(st==='absent') absent++;
+    const slots = subjectsForDay(data.day).filter(s=>s.name===subjName);
+    const periods = data.periods || {};
+    slots.forEach(s=>{
+      const st = periods[String(s.periodIndex)];
+      if(st==='present') present++;
+      else if(st==='absent') absent++;
+    });
   });
   return {present, absent, total: present+absent};
 }
+
+function subjectCardHTML(s, target){
+  const {present, absent, total} = computeStats(s.name);
+  const pct = total>0 ? Math.round((present/total)*1000)/10 : 0;
+  const color = TYPE_COLOR[s.type];
+  let note, noteClass;
+  if(s.type==='none'){
+    note = 'No attendance requirement for this subject.';
+    noteClass = 'neutral';
+  } else if(total===0){
+    note = 'No classes logged yet.';
+    noteClass = 'neutral';
+  } else if(pct >= target){
+    const canSkip = Math.floor((present*100/target) - total);
+    note = canSkip>0 ? `You can miss ${canSkip} more class${canSkip===1?'':'es'} and stay at ${target}%.` : `Right at the edge — one more absence drops you below ${target}%.`;
+    noteClass = 'ok';
+  } else {
+    const need = Math.ceil(((target*total) - 100*present) / (100-target));
+    note = `Attend the next ${need} class${need===1?'':'es'} in a row to reach ${target}%.`;
+    noteClass = 'warn';
+  }
+  const ringPct = Math.min(100,pct);
+  return `<div class="subj-card">
+    <div class="subj-card-top">
+      <div class="ring" style="background:conic-gradient(${color} ${ringPct*3.6}deg, var(--card) 0deg);">
+        <div class="inner">${total>0?pct+'%':'—'}</div>
+      </div>
+      <div class="meta">
+        <div class="nm">${escapeHtml(s.name)}</div>
+        <div class="tp" style="color:${color}">${s.type}</div>
+      </div>
+    </div>
+    <div class="subj-stats">
+      <span>Present <b>${present}</b></span>
+      <span>Absent <b>${absent}</b></span>
+      <span>Total <b>${total}</b></span>
+    </div>
+    <div class="subj-note ${noteClass}">${note}</div>
+  </div>`;
+}
+
 function renderSubjectOverview(){
-  const grid = document.getElementById('subjGrid');
+  const container = document.getElementById('subjGrid');
   const subs = allSubjects();
   const target = Number(userDocData.targetPercentage)||75;
   if(subs.length===0){
-    grid.innerHTML = `<div class="empty-state">Add subjects to your timetable in Account to see stats here.</div>`;
+    container.innerHTML = `<div class="empty-state">Add subjects to your timetable in Account to see stats here.</div>`;
     return;
   }
+  const groups = [
+    {key:'theory', label:'Theory'},
+    {key:'lab', label:'Lab'},
+    {key:'none', label:'No requirement'}
+  ];
   let html = '';
-  subs.forEach(s=>{
-    const {present, absent, total} = computeStats(s.name);
-    const pct = total>0 ? Math.round((present/total)*1000)/10 : 0;
-    const color = TYPE_COLOR[s.type];
-    let note, noteClass;
-    if(s.type==='none'){
-      note = 'No attendance requirement for this subject.';
-      noteClass = 'neutral';
-    } else if(total===0){
-      note = 'No classes logged yet.';
-      noteClass = 'neutral';
-    } else if(pct >= target){
-      const canSkip = Math.floor((present*100/target) - total);
-      note = canSkip>0 ? `You can miss ${canSkip} more class${canSkip===1?'':'es'} and stay at ${target}%.` : `Right at the edge — one more absence drops you below ${target}%.`;
-      noteClass = 'ok';
-    } else {
-      const need = Math.ceil(((target*total) - 100*present) / (100-target));
-      note = `Attend the next ${need} class${need===1?'':'es'} in a row to reach ${target}%.`;
-      noteClass = 'warn';
-    }
-    const ringPct = Math.min(100,pct);
-    html += `<div class="subj-card">
-      <div class="subj-card-top">
-        <div class="ring" style="background:conic-gradient(${color} ${ringPct*3.6}deg, var(--card) 0deg);">
-          <div class="inner">${total>0?pct+'%':'—'}</div>
-        </div>
-        <div class="meta">
-          <div class="nm">${escapeHtml(s.name)}</div>
-          <div class="tp" style="color:${color}">${s.type}</div>
-        </div>
-      </div>
-      <div class="subj-stats">
-        <span>Present <b>${present}</b></span>
-        <span>Absent <b>${absent}</b></span>
-        <span>Total <b>${total}</b></span>
-      </div>
-      <div class="subj-note ${noteClass}">${note}</div>
-    </div>`;
+  groups.forEach(g=>{
+    const items = subs.filter(s=>s.type===g.key);
+    if(items.length===0) return;
+    html += `<h3 class="overview-group-title">${g.label}</h3><div class="subj-grid">`;
+    items.forEach(s=> html += subjectCardHTML(s, target));
+    html += `</div>`;
   });
-  grid.innerHTML = html;
+  container.innerHTML = html;
 }
 
 /* ---------- ASSIGNMENTS ---------- */
