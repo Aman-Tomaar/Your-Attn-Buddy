@@ -215,6 +215,22 @@
 
   .loading-screen{position:fixed;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;z-index:200;}
 
+  /* ---------- LOGIN SCREEN ---------- */
+  #loginScreen{position:fixed;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;z-index:300;}
+  .login-box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:34px 30px;width:340px;}
+  .login-box .mark{width:46px;height:46px;border-radius:12px;margin:0 auto 16px auto;background:linear-gradient(145deg,var(--gold),#c98f2c);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:700;color:#1a1200;font-size:22px;}
+  .login-box h2{font-size:19px;margin:0 0 4px 0;text-align:center;}
+  .login-box p{color:var(--muted);font-size:12.5px;margin:0 0 20px 0;text-align:center;}
+  .login-box input{width:100%;margin-bottom:10px;font-size:14px;padding:10px 12px;}
+  .login-box button.go{width:100%;padding:11px;background:var(--gold);border:none;border-radius:9px;color:#1a1200;font-weight:700;font-size:14px;margin-top:4px;}
+  .login-box button.go:disabled{opacity:.5;}
+  .login-toggle{text-align:center;font-size:12.5px;color:var(--muted);margin-top:16px;}
+  .login-toggle button{background:none;border:none;color:var(--gold);font-weight:600;font-size:12.5px;}
+  .login-error{color:var(--absent);font-size:12px;text-align:center;margin-top:10px;min-height:16px;}
+  .signout-row{display:flex;align-items:center;justify-content:space-between;margin-top:-4px;}
+  .signout-btn{background:var(--card);border:1px solid var(--line);color:var(--muted);padding:6px 14px;border-radius:8px;font-size:12px;}
+  .signout-btn:hover{color:var(--absent);border-color:var(--absent);}
+
   @media(max-width:760px){
     #sidebar{position:fixed;left:0;top:0;bottom:0;}
     .page{padding:22px 16px 50px 16px;}
@@ -222,6 +238,22 @@
 </style>
 </head>
 <body>
+
+<div id="loginScreen" style="display:none;">
+  <div class="login-box">
+    <div class="mark">A</div>
+    <h2 id="loginTitle">Welcome back</h2>
+    <p id="loginSub">Sign in to sync your attendance across your laptop and phone.</p>
+    <input type="text" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button class="go" id="loginSubmit">Sign in</button>
+    <div class="login-error" id="loginError"></div>
+    <div class="login-toggle">
+      <span id="loginToggleText">Don't have an account?</span>
+      <button id="loginToggleBtn">Create one</button>
+    </div>
+  </div>
+</div>
 
 <div id="loadingScreen" class="loading-screen">loading your buddy…</div>
 
@@ -295,8 +327,13 @@
   <!-- ACCOUNT PAGE -->
   <section class="page" id="page-account">
     <div class="page-head">
-      <h1>Account</h1>
-      <p>Set your target attendance and lay out your weekly timetable.</p>
+      <div class="signout-row">
+        <div>
+          <h1>Account</h1>
+          <p>Set your target attendance and lay out your weekly timetable.</p>
+        </div>
+        <button class="signout-btn" id="signOutBtn">Sign out</button>
+      </div>
     </div>
 
     <div class="card">
@@ -364,7 +401,8 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getAuth, signInAnonymously, onAuthStateChanged
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+  createUserWithEmailAndPassword, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc, onSnapshot, collection,
@@ -406,18 +444,67 @@ function todayDate(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
 function isSameDay(a,b){ return fmt(a)===fmt(b); }
 
 /* ---------- AUTH ---------- */
+let isSignUpMode = false;
+
 onAuthStateChanged(auth, async (user) => {
   if(user){
     uid = user.uid;
-    document.getElementById('userTag').textContent = 'uid: ' + uid.slice(0,6);
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('userTag').textContent = user.email || ('uid: '+uid.slice(0,6));
+    document.getElementById('loadingScreen').style.display = 'flex';
     await loadUserDoc();
     await loadTimetable();
     initApp();
+  } else {
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
   }
 });
-signInAnonymously(auth).catch(err=>{
-  document.getElementById('loadingScreen').textContent = 'Auth error: ' + err.message;
+
+document.getElementById('loginToggleBtn').addEventListener('click', ()=>{
+  isSignUpMode = !isSignUpMode;
+  document.getElementById('loginTitle').textContent = isSignUpMode ? 'Create your account' : 'Welcome back';
+  document.getElementById('loginSub').textContent = isSignUpMode
+    ? 'One account, synced on every device you sign into.'
+    : 'Sign in to sync your attendance across your laptop and phone.';
+  document.getElementById('loginSubmit').textContent = isSignUpMode ? 'Create account' : 'Sign in';
+  document.getElementById('loginToggleText').textContent = isSignUpMode ? 'Already have an account?' : "Don't have an account?";
+  document.getElementById('loginToggleBtn').textContent = isSignUpMode ? 'Sign in' : 'Create one';
+  document.getElementById('loginError').textContent = '';
 });
+
+document.getElementById('loginSubmit').addEventListener('click', async ()=>{
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  if(!email || !password){ errEl.textContent = 'Enter an email and password.'; return; }
+  const btn = document.getElementById('loginSubmit');
+  btn.disabled = true;
+  try{
+    if(isSignUpMode){
+      await createUserWithEmailAndPassword(auth, email, password);
+    } else {
+      await signInWithEmailAndPassword(auth, email, password);
+    }
+  } catch(err){
+    errEl.textContent = friendlyAuthError(err.code);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+function friendlyAuthError(code){
+  const map = {
+    'auth/email-already-in-use': 'That email already has an account — sign in instead.',
+    'auth/invalid-email': 'That email address doesn\'t look right.',
+    'auth/weak-password': 'Password should be at least 6 characters.',
+    'auth/user-not-found': 'No account with that email — try creating one.',
+    'auth/wrong-password': 'Wrong password.',
+    'auth/invalid-credential': 'Email or password is incorrect.'
+  };
+  return map[code] || 'Something went wrong — try again.';
+}
 
 async function loadUserDoc(){
   const ref = doc(db,'users',uid);
@@ -833,6 +920,12 @@ document.getElementById('aAdd').addEventListener('click', async ()=>{
   await setDoc(doc(db,'users',uid,'assignments',id), {title, subject, due, done:false});
   document.getElementById('aTitle').value='';
   document.getElementById('aDue').value='';
+});
+
+document.getElementById('signOutBtn').addEventListener('click', async ()=>{
+  if(unsubAttendance){ unsubAttendance(); unsubAttendance = null; }
+  document.getElementById('dateCards').dataset.centered = '';
+  await signOut(auth);
 });
 
 /* ---------- utils ---------- */
