@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="google-site-verification" content="b_PTIoQP65RZxXVVo2BRN67DjQBg6SXvJkzrujbNxqM" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Your Attn Buddy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,7 +44,7 @@
   ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;}
   ::-webkit-scrollbar-track{background:transparent;}
 
-
+  /* ---------- SIDEBAR ---------- */
   #sidebar{
     width:230px;
     min-width:230px;
@@ -104,7 +103,7 @@
   }
   #collapseBtn:hover{color:var(--paper);}
 
-
+  /* ---------- MAIN ---------- */
   #main{flex:1;height:100%;overflow-y:auto;position:relative;}
   .page{padding:32px 40px 60px 40px;max-width:1000px;margin:0 auto;display:none;}
   .page.active{display:block;}
@@ -112,7 +111,7 @@
   .page-head h1{font-size:26px;margin:0 0 4px 0;font-weight:600;}
   .page-head p{color:var(--muted);margin:0;font-size:14px;}
 
-
+  /* ---------- ACCOUNT ---------- */
   .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;margin-bottom:20px;}
   .card h3{margin:0 0 4px 0;font-size:15px;font-weight:600;}
   .card .hint{color:var(--muted);font-size:12.5px;margin:0 0 16px 0;}
@@ -143,7 +142,7 @@
   .legend span{display:inline-flex;align-items:center;gap:6px;}
   .legend .dot{width:8px;height:8px;border-radius:50%;}
 
-
+  /* ---------- ATTENDANCE ---------- */
   .subtabs{display:flex;gap:6px;margin-bottom:22px;background:var(--panel);padding:4px;border-radius:10px;border:1px solid var(--line);width:fit-content;}
   .subtab{padding:7px 16px;border:none;background:transparent;color:var(--muted);border-radius:7px;font-size:13px;font-weight:600;}
   .subtab.active{background:var(--card);color:var(--paper);}
@@ -172,7 +171,7 @@
   .no-classes{color:var(--muted);font-size:13px;font-style:italic;padding:6px 0;}
   .load-more{text-align:center;padding:10px;color:var(--muted);font-size:12px;}
 
- 
+  /* ---------- SUBJECT OVERVIEW ---------- */
   .subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-bottom:24px;}
   .overview-group-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 0 12px 0;}
   .subj-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;}
@@ -188,7 +187,7 @@
   .subj-note.warn{color:var(--absent);}
   .subj-note.neutral{color:var(--muted);}
 
-  
+  /* ---------- ASSIGNMENTS ---------- */
   .assign-form{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
   .assign-form select{background:var(--card);border:1px solid var(--line);color:var(--paper);padding:9px 12px;border-radius:8px;font-size:14px;}
   .btn-primary{background:var(--gold);color:#1a1200;border:none;padding:9px 18px;border-radius:8px;font-weight:700;font-size:13.5px;}
@@ -203,7 +202,15 @@
   .a-del:hover{color:var(--absent);}
   .empty-state{color:var(--muted);font-size:13.5px;text-align:center;padding:40px 0;}
 
-  
+  .due-chip{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+  .due-chip.overdue{background:var(--absent-bg);color:var(--absent);}
+  .due-chip.soon{background:rgba(240,169,59,0.16);color:var(--lab);}
+  .due-chip.ok{background:var(--present-bg);color:var(--present);}
+  .due-chip.done{background:var(--card);color:var(--muted);}
+  .due-chip.neutral{background:var(--card);color:var(--muted);}
+  .due-row{display:flex;align-items:center;gap:8px;margin-top:2px;flex-wrap:wrap;}
+
+  /* ---------- MODAL (first launch) ---------- */
   #onboardModal{
     position:fixed;inset:0;background:rgba(10,12,16,.72);backdrop-filter:blur(3px);
     display:flex;align-items:center;justify-content:center;z-index:100;
@@ -218,7 +225,7 @@
 
   .loading-screen{position:fixed;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;z-index:200;}
 
-  
+  /* ---------- LOGIN SCREEN ---------- */
   #loginScreen{position:fixed;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;z-index:300;}
   .login-box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:34px 30px;width:340px;}
   .login-box .mark{width:46px;height:46px;border-radius:12px;margin:0 auto 16px auto;background:linear-gradient(145deg,var(--gold),#c98f2c);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:700;color:#1a1200;font-size:22px;}
@@ -230,6 +237,20 @@
   .login-toggle{text-align:center;font-size:12.5px;color:var(--muted);margin-top:16px;}
   .login-toggle button{background:none;border:none;color:var(--gold);font-weight:600;font-size:12.5px;}
   .login-error{color:var(--absent);font-size:12px;text-align:center;margin-top:10px;min-height:16px;}
+  .forgot-link{display:block;text-align:right;font-size:12px;color:var(--muted);background:none;border:none;margin:-4px 0 10px 0;width:100%;}
+  .forgot-link:hover{color:var(--gold);}
+  .login-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;}
+  .login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--line);}
+  .google-btn{
+    width:100%;padding:10px;border-radius:9px;border:1px solid var(--line);background:var(--card);
+    color:var(--paper);font-weight:600;font-size:13.5px;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+  }
+  .google-btn:hover{background:var(--card-hover);}
+  .google-btn svg{width:16px;height:16px;flex-shrink:0;}
+  .login-footer{text-align:center;font-size:11px;color:var(--muted);margin-top:18px;padding-top:14px;border-top:1px solid var(--line);}
+  .login-footer a{color:var(--muted);text-decoration:underline;}
+  .login-footer a:hover{color:var(--gold);}
   .signout-row{display:flex;align-items:center;justify-content:space-between;margin-top:-4px;}
   .signout-btn{background:var(--card);border:1px solid var(--line);color:var(--muted);padding:6px 14px;border-radius:8px;font-size:12px;}
   .signout-btn:hover{color:var(--absent);border-color:var(--absent);}
@@ -249,11 +270,21 @@
     <p id="loginSub">Sign in to sync your attendance across your laptop and phone.</p>
     <input type="text" id="loginEmail" placeholder="Email">
     <input type="password" id="loginPassword" placeholder="Password">
+    <button class="forgot-link" id="forgotBtn">Forgot password?</button>
     <button class="go" id="loginSubmit">Sign in</button>
     <div class="login-error" id="loginError"></div>
     <div class="login-toggle">
       <span id="loginToggleText">Don't have an account?</span>
       <button id="loginToggleBtn">Create one</button>
+    </div>
+    <div class="login-divider">or</div>
+    <button class="google-btn" id="googleBtn">
+      <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47a5.53 5.53 0 01-2.4 3.63v3h3.88c2.27-2.09 3.57-5.17 3.57-8.82z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.88-3c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.95H1.27v3.1A12 12 0 0012 24z"/><path fill="#FBBC05" d="M5.27 14.29a7.2 7.2 0 010-4.58v-3.1H1.27a12 12 0 000 10.78l4-3.1z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 001.27 6.61l4 3.1C6.22 6.86 8.87 4.75 12 4.75z"/></svg>
+      Continue with Google
+    </button>
+    <div class="login-footer">
+      Personal student project by Aman Tomar · <a href="https://github.com/Aman-Tomaar/Your-Attn-Buddy" target="_blank" rel="noopener">source on GitHub</a><br>
+      Sign-in powered by Firebase Authentication (Google Cloud)
     </div>
   </div>
 </div>
@@ -324,7 +355,16 @@
       <input type="date" id="aDue">
       <button class="btn-primary" id="aAdd">Add</button>
     </div>
-    <div id="assignList"></div>
+    <div class="subtabs">
+      <button class="subtab active" data-atab="all">All</button>
+      <button class="subtab" data-atab="subjects">By subject</button>
+    </div>
+    <div id="atab-all">
+      <div id="assignList"></div>
+    </div>
+    <div id="atab-subjects" style="display:none;">
+      <div id="assignSubjGrid"></div>
+    </div>
   </section>
 
   <!-- ACCOUNT PAGE -->
@@ -340,11 +380,19 @@
     </div>
 
     <div class="card">
-      <h3>Attendance goal</h3>
-      <p class="hint">Minimum percentage you need to maintain across the semester.</p>
-      <div class="field-row">
-        <input type="number" id="targetPct" class="pct-input" min="1" max="100" value="75">
-        <span>%</span>
+      <h3>Attendance goals</h3>
+      <p class="hint">Set different minimum percentages for theory and lab — colleges often track these separately.</p>
+      <div class="field-row" style="gap:28px;flex-wrap:wrap;">
+        <div class="field-row">
+          <label style="font-size:12.5px;color:var(--muted);">Theory</label>
+          <input type="number" id="theoryTarget" class="pct-input" min="1" max="100" value="75">
+          <span>%</span>
+        </div>
+        <div class="field-row">
+          <label style="font-size:12.5px;color:var(--muted);">Lab</label>
+          <input type="number" id="labTarget" class="pct-input" min="1" max="100" value="75">
+          <span>%</span>
+        </div>
         <span class="save-pill" id="pctSaved">saved</span>
       </div>
     </div>
@@ -405,21 +453,25 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword,
-  createUserWithEmailAndPassword, signOut
+  createUserWithEmailAndPassword, signOut, sendPasswordResetEmail,
+  GoogleAuthProvider, signInWithPopup
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, onSnapshot, collection,
+  getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection,
   query, where, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-
+/* =======================================================
+   1. FIREBASE CONFIG  —  replace with YOUR project's config
+   (Firebase console → Project settings → General → Your apps)
+======================================================= */
 const firebaseConfig = {
-  apiKey: "AIzaSyD0TX5TAxjO1R_H2DqFTQ3fkQujS93pByw",
-  authDomain: "attendance-2-da9d3.firebaseapp.com",
-  projectId: "attendance-2-da9d3",
-  storageBucket: "attendance-2-da9d3.firebasestorage.app",
-  messagingSenderId: "863687006014",
-  appId: "1:863687006014:web:3fccb6b3c59b28c4467e6f"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -431,12 +483,22 @@ const PERIODS = 7;
 const TYPE_COLOR = { theory:"var(--theory)", lab:"var(--lab)", none:"var(--none)" };
 
 let uid = null;
-let userDocData = { targetPercentage: 75, semesterStart: null };
+let userDocData = { theoryTarget: 75, labTarget: 75, semesterStart: null };
+// timetable[day] = array of PERIODS slots. Each slot is one of:
+//   null                              -> free period
+//   {name, type:'theory'|'none'}      -> a 1-period class
+//   {name, type:'lab', span:2}        -> start of a 2-period lab block
+//   {linked:true, start:<periodIdx>}  -> the 2nd hour of the lab starting at `start`
 let timetable = {};
+// attendanceCache['YYYY-MM-DD'] = { day, periods: { "<periodIndex>": "present"|"absent"|"cancelled" } }
+// keyed by the START period index of each class, so two slots of the same
+// subject on the same day are tracked completely independently.
 let attendanceCache = {};
 let unsubAttendance = null;
 
-
+/* ---------- date helpers ---------- */
+// IMPORTANT: use local date parts, never toISOString() (which converts to
+// UTC and silently shifts the date by a day in timezones ahead of UTC).
 function fmt(d){
   const y = d.getFullYear();
   const m = String(d.getMonth()+1).padStart(2,'0');
@@ -447,7 +509,7 @@ function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; 
 function todayDate(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
 function isSameDay(a,b){ return fmt(a)===fmt(b); }
 
-
+/* ---------- AUTH ---------- */
 let isSignUpMode = false;
 
 onAuthStateChanged(auth, async (user) => {
@@ -474,7 +536,9 @@ document.getElementById('loginToggleBtn').addEventListener('click', ()=>{
   document.getElementById('loginSubmit').textContent = isSignUpMode ? 'Create account' : 'Sign in';
   document.getElementById('loginToggleText').textContent = isSignUpMode ? 'Already have an account?' : "Don't have an account?";
   document.getElementById('loginToggleBtn').textContent = isSignUpMode ? 'Sign in' : 'Create one';
-  document.getElementById('loginError').textContent = '';
+  const errEl0 = document.getElementById('loginError');
+  errEl0.textContent = '';
+  errEl0.style.color = 'var(--absent)';
 });
 
 document.getElementById('loginSubmit').addEventListener('click', async ()=>{
@@ -482,6 +546,7 @@ document.getElementById('loginSubmit').addEventListener('click', async ()=>{
   const password = document.getElementById('loginPassword').value;
   const errEl = document.getElementById('loginError');
   errEl.textContent = '';
+  errEl.style.color = 'var(--absent)';
   if(!email || !password){ errEl.textContent = 'Enter an email and password.'; return; }
   const btn = document.getElementById('loginSubmit');
   btn.disabled = true;
@@ -505,10 +570,38 @@ function friendlyAuthError(code){
     'auth/weak-password': 'Password should be at least 6 characters.',
     'auth/user-not-found': 'No account with that email — try creating one.',
     'auth/wrong-password': 'Wrong password.',
-    'auth/invalid-credential': 'Email or password is incorrect.'
+    'auth/invalid-credential': 'Email or password is incorrect.',
+    'auth/popup-closed-by-user': 'Google sign-in was closed before finishing.',
+    'auth/account-exists-with-different-credential': 'That email is already used with a different sign-in method.'
   };
   return map[code] || 'Something went wrong — try again.';
 }
+
+const googleProvider = new GoogleAuthProvider();
+document.getElementById('googleBtn').addEventListener('click', async ()=>{
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  try{
+    await signInWithPopup(auth, googleProvider);
+  } catch(err){
+    errEl.textContent = friendlyAuthError(err.code);
+  }
+});
+
+document.getElementById('forgotBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('loginEmail').value.trim();
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  if(!email){ errEl.textContent = 'Enter your email above first, then tap "Forgot password?".'; return; }
+  try{
+    await sendPasswordResetEmail(auth, email);
+    errEl.style.color = 'var(--present)';
+    errEl.textContent = 'Reset link sent — check your inbox.';
+  } catch(err){
+    errEl.style.color = 'var(--absent)';
+    errEl.textContent = friendlyAuthError(err.code);
+  }
+});
 
 async function loadUserDoc(){
   const ref = doc(db,'users',uid);
@@ -516,8 +609,11 @@ async function loadUserDoc(){
   if(snap.exists()){
     userDocData = snap.data();
   } else {
-    userDocData = { targetPercentage:75, semesterStart:null };
+    userDocData = { theoryTarget:75, labTarget:75, semesterStart:null };
   }
+  // migrate old single-target accounts (from before theory/lab were split)
+  if(userDocData.theoryTarget===undefined) userDocData.theoryTarget = userDocData.targetPercentage || 75;
+  if(userDocData.labTarget===undefined) userDocData.labTarget = userDocData.targetPercentage || 75;
 }
 async function loadTimetable(){
   const ref = doc(db,'users',uid,'meta','timetable');
@@ -531,6 +627,7 @@ async function loadTimetable(){
   });
 }
 
+/* ---------- INIT APP ---------- */
 function initApp(){
   document.getElementById('loadingScreen').style.display='none';
 
@@ -554,7 +651,8 @@ document.getElementById('onboardGo').addEventListener('click', async ()=>{
 });
 
 function startApp(){
-  document.getElementById('targetPct').value = userDocData.targetPercentage || 75;
+  document.getElementById('theoryTarget').value = userDocData.theoryTarget || 75;
+  document.getElementById('labTarget').value = userDocData.labTarget || 75;
   document.getElementById('semStart').value = userDocData.semesterStart;
   renderTimetableEditor();
   setupNav();
@@ -565,6 +663,7 @@ function startApp(){
   subscribeAssignments();
 }
 
+/* ---------- NAV ---------- */
 function setupNav(){
   document.querySelectorAll('.navbtn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -579,25 +678,44 @@ function setupNav(){
     sb.classList.toggle('collapsed');
     document.getElementById('collapseBtn').textContent = sb.classList.contains('collapsed') ? '›' : '‹';
   });
-  document.querySelectorAll('.subtab').forEach(tab=>{
+  document.querySelectorAll('#page-attendance .subtab').forEach(tab=>{
     tab.addEventListener('click', ()=>{
-      document.querySelectorAll('.subtab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('#page-attendance .subtab').forEach(t=>t.classList.remove('active'));
       tab.classList.add('active');
       document.getElementById('tab-log').style.display = tab.dataset.tab==='log' ? 'block':'none';
       document.getElementById('tab-overview').style.display = tab.dataset.tab==='overview' ? 'block':'none';
       if(tab.dataset.tab==='overview') renderSubjectOverview();
     });
   });
+  document.querySelectorAll('#page-assignments .subtab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('#page-assignments .subtab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('atab-all').style.display = tab.dataset.atab==='all' ? 'block':'none';
+      document.getElementById('atab-subjects').style.display = tab.dataset.atab==='subjects' ? 'block':'none';
+      if(tab.dataset.atab==='subjects') renderAssignSubjectOverview();
+    });
+  });
 }
 
-
-let pctTimer;
-document.getElementById('targetPct').addEventListener('input', e=>{
-  clearTimeout(pctTimer);
-  pctTimer = setTimeout(async ()=>{
-    userDocData.targetPercentage = Number(e.target.value)||75;
+/* ---------- ACCOUNT: target % ---------- */
+let theoryTimer, labTimer;
+document.getElementById('theoryTarget').addEventListener('input', e=>{
+  clearTimeout(theoryTimer);
+  theoryTimer = setTimeout(async ()=>{
+    userDocData.theoryTarget = Number(e.target.value)||75;
     await setDoc(doc(db,'users',uid), userDocData, {merge:true});
     flashSaved('pctSaved');
+    renderSubjectOverview();
+  }, 500);
+});
+document.getElementById('labTarget').addEventListener('input', e=>{
+  clearTimeout(labTimer);
+  labTimer = setTimeout(async ()=>{
+    userDocData.labTarget = Number(e.target.value)||75;
+    await setDoc(doc(db,'users',uid), userDocData, {merge:true});
+    flashSaved('pctSaved');
+    renderSubjectOverview();
   }, 500);
 });
 document.getElementById('semStart').addEventListener('change', async e=>{
@@ -612,8 +730,8 @@ function flashSaved(id){
   setTimeout(()=>el.classList.remove('show'), 1400);
 }
 
-
-let editingCell = null; 
+/* ---------- ACCOUNT: timetable editor ---------- */
+let editingCell = null; // {day, p} — p is always the START period of the class
 function renderTimetableEditor(){
   const table = document.getElementById('timetableEl');
   let html = '<tr><th style="width:78px;"></th>';
@@ -624,7 +742,7 @@ function renderTimetableEditor(){
     let p=0;
     while(p<PERIODS){
       const cell = timetable[day][p];
-      if(cell && cell.linked){ p++; continue; } 
+      if(cell && cell.linked){ p++; continue; } // safety net, shouldn't normally hit
       if(cell && cell.type==='lab'){
         html += `<td colspan="2"><button class="cell-btn" data-day="${day}" data-p="${p}">
           <span class="dot" style="background:${TYPE_COLOR.lab}"></span>
@@ -655,7 +773,7 @@ function renderTimetableEditor(){
 let selectedType = 'theory';
 function openCellModal(day, p){
   let cell = timetable[day][p];
-  if(cell && cell.linked){ p = cell.start; cell = timetable[day][p]; } 
+  if(cell && cell.linked){ p = cell.start; cell = timetable[day][p]; } // always edit from the start slot
   editingCell = {day,p};
   const label = (cell && cell.type==='lab') ? `Period ${p+1}-${p+2}` : `Period ${p+1}`;
   document.getElementById('cellModalTitle').textContent = `${day} — ${label}`;
@@ -677,7 +795,8 @@ function highlightTypeButtons(){
 });
 document.getElementById('cellCancel').addEventListener('click', ()=> document.getElementById('cellModal').style.display='none');
 
-
+// Clears whatever occupies this slot — if it's a lab (or the 2nd hour of one),
+// both hours are freed together so the timetable never ends up with an orphan slot.
 function clearSlot(day,p){
   const cell = timetable[day][p];
   if(!cell) return;
@@ -696,7 +815,7 @@ document.getElementById('cellSave').addEventListener('click', async ()=>{
   const name = document.getElementById('cellSubjectName').value.trim();
   if(!name || !editingCell) return;
   const {day,p} = editingCell;
-  clearSlot(day,p); 
+  clearSlot(day,p); // clear out whatever was here first (handles switching type)
   if(selectedType==='lab'){
     if(p+1>=PERIODS){
       alert("A lab needs 2 back-to-back periods — pick an earlier starting period so it fits before the last period.");
@@ -727,7 +846,7 @@ document.getElementById('cellClear').addEventListener('click', async ()=>{
   renderAssignSubjectOptions();
 });
 
-
+/* ---------- get unique subjects from timetable ---------- */
 function allSubjects(){
   const map = {};
   DAYS.forEach(day=> (timetable[day]||[]).forEach(cell=>{
@@ -735,7 +854,9 @@ function allSubjects(){
   }));
   return Object.entries(map).map(([name,type])=>({name,type}));
 }
-
+// Returns only the START slot of every class for that weekday — a lab's 2nd
+// hour is never listed separately, and each occurrence keeps its own
+// periodIndex so two classes of the same subject on the same day stay distinct.
 function subjectsForDay(day){
   const list = [];
   const arr = timetable[day]||[];
@@ -752,8 +873,8 @@ function subjectsForDay(day){
   return list;
 }
 
-
-let centerDate, rangeStart, rangeEnd; 
+/* ---------- ATTENDANCE LOG (infinite scroll) ---------- */
+let centerDate, rangeStart, rangeEnd; // Date objects
 function loadWindow(center, offsetStartDays, offsetEndDays, first){
   rangeStart = addDays(center, offsetStartDays);
   rangeEnd = addDays(center, offsetEndDays);
@@ -793,7 +914,7 @@ function renderDateCards(){
     const isToday = isSameDay(d, todayDate());
     const subjects = DAYS.includes(dName) ? subjectsForDay(dName) : [];
 
-    
+    // Hide Saturday/Sunday entirely when nothing's scheduled that day.
     if((dName==='Saturday' || dName==='Sunday') && subjects.length===0){
       d = addDays(d,1);
       continue;
@@ -834,7 +955,7 @@ function renderDateCards(){
     btn.addEventListener('click', ()=> markStatus(btn.dataset.date, btn.dataset.period, btn.dataset.status));
   });
 
-  
+  // scroll to today on first render
   if(!container.dataset.centered){
     container.dataset.centered = '1';
     requestAnimationFrame(()=>{
@@ -849,7 +970,7 @@ async function markStatus(dateKey, periodIndex, status){
   const existing = attendanceCache[dateKey] || { day: dName, periods:{} };
   const periods = {...existing.periods};
   const key = String(periodIndex);
-  periods[key] = periods[key]===status ? '' : status; 
+  periods[key] = periods[key]===status ? '' : status; // toggle off if clicked again
   if(!periods[key]) delete periods[key];
   await setDoc(doc(db,'users',uid,'attendance',dateKey), { day: dName, periods }, {merge:false});
 }
@@ -874,7 +995,10 @@ document.getElementById('logScroll').addEventListener('scroll', (e)=>{
   if(el.scrollTop + el.clientHeight > el.scrollHeight - 100){ rangeEnd = addDays(rangeEnd,7); clampToSemester(); renderDateCards(); }
 });
 
-
+/* ---------- SUBJECT OVERVIEW ---------- */
+// Counts each scheduled slot for a subject independently — if the same
+// subject appears twice in one day, being present for one and absent for
+// the other is tracked correctly instead of being merged into one status.
 function computeStats(subjName){
   let present=0, absent=0;
   Object.entries(attendanceCache).forEach(([date,data])=>{
@@ -932,28 +1056,27 @@ function subjectCardHTML(s, target){
 function renderSubjectOverview(){
   const container = document.getElementById('subjGrid');
   const subs = allSubjects();
-  const target = Number(userDocData.targetPercentage)||75;
   if(subs.length===0){
     container.innerHTML = `<div class="empty-state">Add subjects to your timetable in Account to see stats here.</div>`;
     return;
   }
   const groups = [
-    {key:'theory', label:'Theory'},
-    {key:'lab', label:'Lab'},
-    {key:'none', label:'No requirement'}
+    {key:'theory', label:'Theory', target: Number(userDocData.theoryTarget)||75},
+    {key:'lab', label:'Lab', target: Number(userDocData.labTarget)||75},
+    {key:'none', label:'No requirement', target: null}
   ];
   let html = '';
   groups.forEach(g=>{
     const items = subs.filter(s=>s.type===g.key);
     if(items.length===0) return;
     html += `<h3 class="overview-group-title">${g.label}</h3><div class="subj-grid">`;
-    items.forEach(s=> html += subjectCardHTML(s, target));
+    items.forEach(s=> html += subjectCardHTML(s, g.target));
     html += `</div>`;
   });
   container.innerHTML = html;
 }
 
-
+/* ---------- ASSIGNMENTS ---------- */
 function renderAssignSubjectOptions(){
   const sel = document.getElementById('aSubject');
   const subs = allSubjects();
@@ -961,6 +1084,20 @@ function renderAssignSubjectOptions(){
     ? subs.map(s=>`<option value="${escapeAttr(s.name)}">${escapeHtml(s.name)}</option>`).join('')
     : `<option value="">No subjects yet</option>`;
 }
+
+// How urgent a due date is, for both the list view and the subject overview.
+function dueInfo(dueStr, done){
+  if(!dueStr) return {label:'No due date', cls:'neutral'};
+  if(done) return {label:`Due ${dueStr}`, cls:'done'};
+  const due = new Date(dueStr+'T00:00:00');
+  const today = todayDate();
+  const diffDays = Math.round((due-today)/86400000);
+  if(diffDays<0) return {label:`Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays)===1?'':'s'}`, cls:'overdue'};
+  if(diffDays===0) return {label:'Due today', cls:'soon'};
+  if(diffDays<=2) return {label:`${diffDays} day${diffDays===1?'':'s'} left`, cls:'soon'};
+  return {label:`${diffDays} days left`, cls:'ok'};
+}
+
 let assignments = {};
 function subscribeAssignments(){
   const q = query(collection(db,'users',uid,'assignments'), orderBy('due','asc'));
@@ -968,33 +1105,94 @@ function subscribeAssignments(){
     assignments = {};
     snap.forEach(d=> assignments[d.id]=d.data());
     renderAssignments();
+    renderAssignSubjectOverview();
   });
 }
 function renderAssignments(){
   const list = document.getElementById('assignList');
   const entries = Object.entries(assignments);
   if(entries.length===0){ list.innerHTML = `<div class="empty-state">Nothing due. Add an assignment above.</div>`; return; }
-  list.innerHTML = entries.map(([id,a])=>`
+  list.innerHTML = entries.map(([id,a])=>{
+    const info = dueInfo(a.due, a.done);
+    return `
     <div class="assign-item ${a.done?'done':''}">
       <button class="a-check ${a.done?'on':''}" data-id="${id}"></button>
       <div class="a-main">
         <div class="a-title">${escapeHtml(a.title)}</div>
-        <div class="a-sub">${escapeHtml(a.subject||'General')} · due ${a.due||'—'}</div>
+        <div class="due-row">
+          <span class="a-sub">${escapeHtml(a.subject||'General')} · ${a.due?escapeHtml(a.due):'no due date'}</span>
+          <span class="due-chip ${info.cls}">${info.label}</span>
+        </div>
       </div>
       <button class="a-del" data-id="${id}">✕</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   list.querySelectorAll('.a-check').forEach(b=> b.addEventListener('click', ()=> toggleAssign(b.dataset.id)));
   list.querySelectorAll('.a-del').forEach(b=> b.addEventListener('click', ()=> deleteAssign(b.dataset.id)));
 }
+
+// Per-subject: how many assignments are done vs total, and the soonest
+// pending due date (highlighted the same way as the list view).
+function computeAssignmentStats(subjectName){
+  const items = Object.values(assignments).filter(a=>a.subject===subjectName);
+  const total = items.length;
+  const done = items.filter(a=>a.done).length;
+  let nextDue = null;
+  items.filter(a=>!a.done && a.due).forEach(a=>{
+    if(!nextDue || a.due < nextDue.due) nextDue = a;
+  });
+  return {total, done, nextDue};
+}
+
+function renderAssignSubjectOverview(){
+  const container = document.getElementById('assignSubjGrid');
+  const subs = allSubjects();
+  if(subs.length===0){
+    container.innerHTML = `<div class="empty-state">Add subjects to your timetable in Account to see this here.</div>`;
+    return;
+  }
+  let html = '<div class="subj-grid">';
+  subs.forEach(s=>{
+    const {total, done, nextDue} = computeAssignmentStats(s.name);
+    const color = TYPE_COLOR[s.type];
+    const ringDeg = total>0 ? Math.round((done/total)*360) : 0;
+    let dueHtml;
+    if(nextDue){
+      const info = dueInfo(nextDue.due, false);
+      dueHtml = `<span class="due-chip ${info.cls}">${info.label}</span><span class="mono" style="color:var(--muted);font-size:11px;">${nextDue.due}</span>`;
+    } else if(total>0){
+      dueHtml = `<span class="due-chip done">All caught up</span>`;
+    } else {
+      dueHtml = `<span class="due-chip neutral">No assignments yet</span>`;
+    }
+    html += `<div class="subj-card">
+      <div class="subj-card-top">
+        <div class="ring" style="background:conic-gradient(${color} ${ringDeg}deg, var(--card) 0deg);">
+          <div class="inner">${total>0?done+'/'+total:'—'}</div>
+        </div>
+        <div class="meta">
+          <div class="nm">${escapeHtml(s.name)}</div>
+          <div class="tp" style="color:${color}">${s.type}</div>
+        </div>
+      </div>
+      <div class="subj-stats">
+        <span>Done <b>${done}</b></span>
+        <span>Pending <b>${total-done}</b></span>
+        <span>Total <b>${total}</b></span>
+      </div>
+      <div class="due-row">${dueHtml}</div>
+    </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
 async function toggleAssign(id){
   const a = assignments[id];
   await setDoc(doc(db,'users',uid,'assignments',id), {...a, done: !a.done});
 }
 async function deleteAssign(id){
-  await setDoc(doc(db,'users',uid,'assignments',id), {deleted:true, ...assignments[id]});
-  await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js").then(async (m)=>{
-    await m.deleteDoc(doc(db,'users',uid,'assignments',id));
-  });
+  await deleteDoc(doc(db,'users',uid,'assignments',id));
 }
 document.getElementById('aAdd').addEventListener('click', async ()=>{
   const title = document.getElementById('aTitle').value.trim();
@@ -1013,7 +1211,7 @@ document.getElementById('signOutBtn').addEventListener('click', async ()=>{
   await signOut(auth);
 });
 
-
+/* ---------- utils ---------- */
 function escapeHtml(str){ return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function escapeAttr(str){ return escapeHtml(str).replace(/"/g,'&quot;'); }
 </script>
