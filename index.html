@@ -202,6 +202,14 @@
   .a-del:hover{color:var(--absent);}
   .empty-state{color:var(--muted);font-size:13.5px;text-align:center;padding:40px 0;}
 
+  .admin-layout{display:flex;gap:20px;align-items:flex-start;}
+  .admin-sidebar{width:220px;flex-shrink:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;}
+  .admin-sidebar-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px;}
+  .admin-user-btn{width:100%;text-align:left;padding:9px 10px;border-radius:8px;border:none;background:transparent;color:var(--paper);font-size:13px;margin-bottom:2px;}
+  .admin-user-btn:hover{background:var(--card);}
+  .admin-user-btn.active{background:var(--card-hover);color:var(--gold);font-weight:600;}
+  .admin-main{flex:1;min-width:0;}
+
   .due-chip{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;}
   .due-chip.overdue{background:var(--absent-bg);color:var(--absent);}
   .due-chip.soon{background:rgba(240,169,59,0.16);color:var(--lab);}
@@ -309,6 +317,10 @@
     </button>
   </div>
   <div class="sidebar-foot">
+    <button class="navbtn" data-page="admin" id="adminNavBtn" style="display:none;">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg></span>
+      <span class="label">Admin</span>
+    </button>
     <button class="navbtn" data-page="account">
       <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
       <span class="label">Account</span>
@@ -364,6 +376,24 @@
     </div>
     <div id="atab-subjects" style="display:none;">
       <div id="assignSubjGrid"></div>
+    </div>
+  </section>
+
+  <!-- ADMIN PAGE -->
+  <section class="page" id="page-admin">
+    <div class="page-head">
+      <h1>Admin</h1>
+      <p>Every account's timetable, attendance, and assignments — read-only.</p>
+    </div>
+    <div class="admin-layout">
+      <div class="admin-sidebar">
+        <div class="admin-sidebar-title">Accounts</div>
+        <div id="adminUserList"><div class="empty-state">Loading…</div></div>
+      </div>
+      <div class="admin-main">
+        <h3 id="adminDetailTitle" style="margin:0 0 16px 0;font-size:16px;">Select an account</h3>
+        <div id="adminDetail"></div>
+      </div>
     </div>
   </section>
 
@@ -457,13 +487,12 @@ import {
   GoogleAuthProvider, signInWithPopup
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot, collection,
+  getFirestore, doc, getDoc, getDocs, setDoc, deleteDoc, onSnapshot, collection,
   query, where, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* =======================================================
-   1. FIREBASE CONFIG  —  replace with YOUR project's config
-   (Firebase console → Project settings → General → Your apps)
+   1. FIREBASE CONFIG
 ======================================================= */
 const firebaseConfig = {
   apiKey: "AIzaSyD0TX5TAxjO1R_H2DqFTQ3fkQujS93pByw",
@@ -512,6 +541,7 @@ function isSameDay(a,b){ return fmt(a)===fmt(b); }
 
 /* ---------- AUTH ---------- */
 let isSignUpMode = false;
+let isAdmin = false;
 
 onAuthStateChanged(auth, async (user) => {
   if(user){
@@ -519,7 +549,17 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('userTag').textContent = user.email || ('uid: '+uid.slice(0,6));
     document.getElementById('loadingScreen').style.display = 'flex';
+
+    // Admin access comes from a Firebase custom claim set server-side (see
+    // make-admin.js) — never from anything stored in this file — so it
+    // can't be read out of, or faked from, the page's own source code.
+    const tokenResult = await user.getIdTokenResult();
+    isAdmin = !!tokenResult.claims.admin;
+    document.getElementById('adminNavBtn').style.display = isAdmin ? 'flex' : 'none';
+
     await loadUserDoc();
+    userDocData.email = user.email || null;
+    await setDoc(doc(db,'users',uid), {email:user.email||null}, {merge:true});
     await loadTimetable();
     initApp();
   } else {
@@ -672,6 +712,7 @@ function setupNav(){
       btn.classList.add('active');
       document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
       document.getElementById('page-'+btn.dataset.page).classList.add('active');
+      if(btn.dataset.page==='admin' && isAdmin) loadAdminUserList();
     });
   });
   document.getElementById('collapseBtn').addEventListener('click', ()=>{
@@ -848,9 +889,9 @@ document.getElementById('cellClear').addEventListener('click', async ()=>{
 });
 
 /* ---------- get unique subjects from timetable ---------- */
-function allSubjects(){
+function allSubjects(tt=timetable){
   const map = {};
-  DAYS.forEach(day=> (timetable[day]||[]).forEach(cell=>{
+  DAYS.forEach(day=> (tt[day]||[]).forEach(cell=>{
     if(cell && !cell.linked) map[cell.name] = cell.type;
   }));
   return Object.entries(map).map(([name,type])=>({name,type}));
@@ -858,9 +899,9 @@ function allSubjects(){
 // Returns only the START slot of every class for that weekday — a lab's 2nd
 // hour is never listed separately, and each occurrence keeps its own
 // periodIndex so two classes of the same subject on the same day stay distinct.
-function subjectsForDay(day){
+function subjectsForDay(day, tt=timetable){
   const list = [];
-  const arr = timetable[day]||[];
+  const arr = tt[day]||[];
   for(let p=0;p<arr.length;p++){
     const cell = arr[p];
     if(!cell || cell.linked) continue;
@@ -1000,10 +1041,10 @@ document.getElementById('logScroll').addEventListener('scroll', (e)=>{
 // Counts each scheduled slot for a subject independently — if the same
 // subject appears twice in one day, being present for one and absent for
 // the other is tracked correctly instead of being merged into one status.
-function computeStats(subjName){
+function computeStats(subjName, attCache=attendanceCache, tt=timetable){
   let present=0, absent=0;
-  Object.entries(attendanceCache).forEach(([date,data])=>{
-    const slots = subjectsForDay(data.day).filter(s=>s.name===subjName);
+  Object.entries(attCache).forEach(([date,data])=>{
+    const slots = subjectsForDay(data.day, tt).filter(s=>s.name===subjName);
     const periods = data.periods || {};
     slots.forEach(s=>{
       const st = periods[String(s.periodIndex)];
@@ -1014,8 +1055,8 @@ function computeStats(subjName){
   return {present, absent, total: present+absent};
 }
 
-function subjectCardHTML(s, target){
-  const {present, absent, total} = computeStats(s.name);
+function subjectCardHTML(s, target, attCache=attendanceCache, tt=timetable){
+  const {present, absent, total} = computeStats(s.name, attCache, tt);
   const pct = total>0 ? Math.round((present/total)*1000)/10 : 0;
   const color = TYPE_COLOR[s.type];
   let note, noteClass;
@@ -1134,8 +1175,8 @@ function renderAssignments(){
 
 // Per-subject: how many assignments are done vs total, and the soonest
 // pending due date (highlighted the same way as the list view).
-function computeAssignmentStats(subjectName){
-  const items = Object.values(assignments).filter(a=>a.subject===subjectName);
+function computeAssignmentStats(subjectName, assignmentsObj=assignments){
+  const items = Object.values(assignmentsObj).filter(a=>a.subject===subjectName);
   const total = items.length;
   const done = items.filter(a=>a.done).length;
   let nextDue = null;
@@ -1213,6 +1254,109 @@ document.getElementById('signOutBtn').addEventListener('click', async ()=>{
 });
 
 /* ---------- utils ---------- */
+/* ---------- ADMIN (read-only view of every account) ----------
+   Access is gated entirely by a Firebase custom claim on the signed-in
+   account (see make-admin.js) and by firestore.rules on the server side —
+   nothing here is a client-side password check, so there's nothing in
+   this file that could be extracted to fake admin access. */
+async function loadAdminUserList(){
+  const listEl = document.getElementById('adminUserList');
+  try{
+    const snap = await getDocs(collection(db,'users'));
+    const users = [];
+    snap.forEach(d=> users.push({uid:d.id, ...d.data()}));
+    if(users.length===0){ listEl.innerHTML = `<div class="empty-state">No accounts yet.</div>`; return; }
+    listEl.innerHTML = users.map(u=>
+      `<button class="admin-user-btn" data-uid="${u.uid}">${escapeHtml(u.email || (u.uid.slice(0,10)+'…'))}</button>`
+    ).join('');
+    listEl.querySelectorAll('.admin-user-btn').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        listEl.querySelectorAll('.admin-user-btn').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        loadAdminUserDetail(b.dataset.uid, b.textContent);
+      });
+    });
+  } catch(err){
+    listEl.innerHTML = `<div class="empty-state">Couldn't load accounts — check that your admin claim and firestore.rules are set up (see make-admin.js).</div>`;
+  }
+}
+
+async function loadAdminUserDetail(targetUid, label){
+  document.getElementById('adminDetailTitle').textContent = label;
+  const detailEl = document.getElementById('adminDetail');
+  detailEl.innerHTML = `<div class="empty-state">Loading…</div>`;
+
+  const [userSnap, ttSnap, attSnap, assignSnap] = await Promise.all([
+    getDoc(doc(db,'users',targetUid)),
+    getDoc(doc(db,'users',targetUid,'meta','timetable')),
+    getDocs(collection(db,'users',targetUid,'attendance')),
+    getDocs(collection(db,'users',targetUid,'assignments'))
+  ]);
+
+  const uData = userSnap.exists() ? userSnap.data() : {};
+  const tt = ttSnap.exists() ? ttSnap.data() : {};
+  DAYS.forEach(d=>{
+    let arr = tt[d]||[];
+    if(arr.length>PERIODS) arr = arr.slice(0,PERIODS);
+    while(arr.length<PERIODS) arr.push(null);
+    tt[d]=arr;
+  });
+  const attCache = {};
+  attSnap.forEach(d=> attCache[d.id]=d.data());
+  const userAssignments = {};
+  assignSnap.forEach(d=> userAssignments[d.id]=d.data());
+
+  const subs = allSubjects(tt);
+  let html = '';
+
+  if(subs.length===0){
+    html = `<div class="empty-state">This account hasn't set up a timetable yet.</div>`;
+  } else {
+    const groups = [
+      {key:'theory', label:'Theory', target: Number(uData.theoryTarget)||75},
+      {key:'lab', label:'Lab', target: Number(uData.labTarget)||75},
+      {key:'none', label:'No requirement', target: null}
+    ];
+    groups.forEach(g=>{
+      const items = subs.filter(s=>s.type===g.key);
+      if(items.length===0) return;
+      html += `<h3 class="overview-group-title">${g.label}</h3><div class="subj-grid">`;
+      items.forEach(s=> html += subjectCardHTML(s, g.target, attCache, tt));
+      html += `</div>`;
+    });
+
+    html += `<h3 class="overview-group-title">Assignments</h3><div class="subj-grid">`;
+    subs.forEach(s=>{
+      const {total, done, nextDue} = computeAssignmentStats(s.name, userAssignments);
+      const color = TYPE_COLOR[s.type];
+      const ringDeg = total>0 ? Math.round((done/total)*360) : 0;
+      let dueHtml;
+      if(nextDue){
+        const info = dueInfo(nextDue.due, false);
+        dueHtml = `<span class="due-chip ${info.cls}">${info.label}</span><span class="mono" style="color:var(--muted);font-size:11px;">${nextDue.due}</span>`;
+      } else if(total>0){
+        dueHtml = `<span class="due-chip done">All caught up</span>`;
+      } else {
+        dueHtml = `<span class="due-chip neutral">No assignments</span>`;
+      }
+      html += `<div class="subj-card">
+        <div class="subj-card-top">
+          <div class="ring" style="background:conic-gradient(${color} ${ringDeg}deg, var(--card) 0deg);">
+            <div class="inner">${total>0?done+'/'+total:'—'}</div>
+          </div>
+          <div class="meta">
+            <div class="nm">${escapeHtml(s.name)}</div>
+            <div class="tp" style="color:${color}">${s.type}</div>
+          </div>
+        </div>
+        <div class="due-row">${dueHtml}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  detailEl.innerHTML = html;
+}
+
 function escapeHtml(str){ return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function escapeAttr(str){ return escapeHtml(str).replace(/"/g,'&quot;'); }
 </script>
